@@ -1,0 +1,141 @@
+= Setting up a OSM Mano development environment
+
+The purpose of this repository is to document different approaches of setting up a development environment for OSM Mano. The approaches are compared by different criterion.
+
+* Hardware requirements: Can the whole environment be run on a single developer workstation or do i need dedicated hardware?
+* Effort: Can i create the environment on the fly or should i create a permanent environment?
+* Software requirements: Do i need certain software or operating systems to setup this environment?
+
+A OSM Mano development environment needs at least two components:
+
+* A OSM Mano host that runs the whole management system
+* The cloud itself (e.g. OpenSTACK)
+
+== Approach 1: Setup OSM with Vagrant and use the VIM emulator
+
+This approach uses the vagrant image prepackaged by OSM Mano and their VIM emulator.
+
+The setup is documented here: https://osm.etsi.org/wikipub/index.php/How_to_run_OSM_on_Vagrant.
+
+=== Requirements
+
+* Software: Vagrant, VirtualBox
+
+=== Setup
+
+If you want/can use Vagrant and VirtualBox the setup is relatively easy.
+
+First use vagrant to create a Virtual Machine which comes with OSM Mano pre-installed.
+
+```bash
+vagrant init osm/releasesix
+vagrant up
+vagrant ssh
+```
+
+The VIM Emulator should be already installed, you only must start it.
+
+
+
+==== Without Vagrant / Other VM Manager
+
+If you want to use a different vm manager, e.g. kvm you have to install osm manually which is slightly more complex.
+
+1. Setup a ubuntu 16 vm with hardware as specified here: https://osm.etsi.org/wikipub/index.php/OSM_Release_SIX (Note: 20GB was not enough disk space in my experience -> use 30)
+
+=== Comparision
+
+* Runs on a single machine and is relatively easy to setup
+* Requires exactly this software (e.g. Vagrant + libvirt/kvm does not work)
+* The VIM-Emulator allows the deployment of real network functions, packaged as Docker containers.
+
+== Abbreviations
+
+|===
+| abbreviation | meaning
+| BSS
+| Business Support System
+| DCAE
+| Data Collection and Analytics Engine
+| DPD
+| Deployment Process Delay
+| EM
+| Element Manager
+| ETSI
+| European Telecommunications Standards Institute
+| FCAPS
+| Fault, Configuration, Accounting, Performance, Security
+| FM
+| Fault ManagementHOTHeat Orchestration Template
+| KPIs
+| Key Performance IndicatorsLCMLife Cycle Management
+| MANO
+| Management and Orchestration
+| NFV
+| Network Function Virtualization
+| NFVI
+| Network Function Virtualization Infrastructure
+| NFVO
+| Network Function Virtualization Orchestration
+| NMS
+| Network Management SystemNSNetwork Service
+| NSD
+| Network Service Descriptor
+| ONAP
+| Open Network Automation Platform
+| OPD
+| On-boarding Process Delay
+| OSG
+| Open Source Group
+| OSM
+| Open Source MANO
+| OSS
+| Operation Support System
+| PM
+| Performance Management
+| QoD
+| Quality Of Decision
+| QoS
+| Quality Of Service
+| ROD
+| Run-time Orchestration Delay
+| SDC
+| Service Design Center
+| SLA
+| Service Level Agreement
+| TRL
+| Technology Readiness Level
+| vBNG
+| Virtualized Bridge Network Gateway
+| vBRG
+| Virtualized Bridge Residential Gateway
+| vCPE
+| Virtual Customer Premises Equipment
+| vCPU
+| Virtual CPU
+| vEPC
+| Virtual Evolved Packet Core
+| vGDHCP
+| Virtualized Gateway and DHCP
+| vGMUX
+| Virtualized Gateway Multiplexer
+| VIM
+| Virtual Infrastructure Manager
+| vINFRA
+| Virtual Infrastructure
+| VL
+| Virtual Link
+| vLB
+| Virtual Load Balancer
+| VMs
+| Virtual Machines
+| VNFD
+| Virtual Network Function Descriptor
+| VNFFG
+| VNF Forwarding Graph
+| VNFM
+| Virtual Network Function Manager
+| VNFs
+| Virtual Network Functions
+|
+|===
