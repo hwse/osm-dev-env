@@ -1,2 +1,2 @@
 # store device specific variables here
-./env_vars.sh
+env_vars.sh
