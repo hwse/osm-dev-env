@@ -1,2 +1,5 @@
 # store device specific variables here
 env_vars.sh
+
+# ignore clonec devops
+devops/
