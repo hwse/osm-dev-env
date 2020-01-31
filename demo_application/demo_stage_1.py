@@ -1,29 +1,51 @@
 #!/usr/bin/env python3
+import itertools
 import json
 import logging
 import os
 import socket
-import itertools
+
+import common
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_CONFIG_PATH = os.path.join(SCRIPT_PATH, 'stage_1.json')
-
-STAGE_2_HOST = 'localhost'
-STAGE_2_PORT = 6000
 
 LOGGER = logging.getLogger('stage_1')
+
+
+class Config:
+    DEFAULT_CONFIG_PATH = os.path.join(SCRIPT_PATH, 'stage_1.json')
+
+    def __init__(self):
+        self.config = common.JsonFileSync(self.DEFAULT_CONFIG_PATH)
+        self.config.start()
+
+    @property
+    def stage_1_host(self):
+        return self.config.get('STAGE_1_HOST', 'localhost')
+
+    @property
+    def stage_1_port(self):
+        return int(self.config.get('STAGE_1_PORT', 5000))
+
+    @property
+    def stage_2_host(self):
+        return self.config.get('STAGE_2_HOST', 'localhost')
+
+    @property
+    def stage_2_port(self):
+        return int(self.config.get('STAGE_2_PORT', 6000))
+
+
+CONFIG = Config()
 
 
 def server_loop():
     connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    address = 'localhost'
-    port = 5000
+    LOGGER.info('starting server on %s %s', CONFIG.stage_1_host, CONFIG.stage_1_port)
 
-    LOGGER.info('starting server on %s %s', address, port)
-
-    connection.bind((address, port))
+    connection.bind((CONFIG.stage_1_host, CONFIG.stage_1_port))
     connection.listen(10)
 
     while True:
@@ -53,9 +75,9 @@ def process_data(input_text):
 
 def send_to_stage_2(json_text):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.connect((STAGE_2_HOST, STAGE_2_PORT))
+        s.connect((CONFIG.stage_2_host, CONFIG.stage_2_port))
         s.sendall(json_text)
-        LOGGER.info('sent results to %s %s', STAGE_2_HOST, STAGE_2_PORT)
+        LOGGER.info('sent results to %s %s', CONFIG.stage_2_host, CONFIG.stage_2_port)
 
 
 def main():

@@ -11,11 +11,11 @@ from concurrent.futures import ThreadPoolExecutor
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_CONFIG_PATH = os.path.join(SCRIPT_PATH, 'stage_1.json')
 
-STAGE_2_ADDRESS = 'localhost'
-STAGE_2_PORT = 6000
+STAGE_2_HOST = os.environ.get('STAGE_2_HOST', 'localhost')
+STAGE_2_PORT = int(os.environ.get('STAGE_2_PORT', 6000))
 
-WEB_ADDRESS = 'localhost'
-WEB_PORT = 8081
+WEB_HOST = os.environ.get('STAGE_2_HOST', 'localhost')
+WEB_PORT = int(os.environ.get('WEB_PORT', 8081))
 
 LOGGER = logging.getLogger('stage_2')
 
@@ -26,9 +26,9 @@ def server_loop():
     connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    LOGGER.info('starting server on %s %s', STAGE_2_ADDRESS, STAGE_2_PORT)
+    LOGGER.info('starting server on %s %s', STAGE_2_HOST, STAGE_2_PORT)
 
-    connection.bind((STAGE_2_ADDRESS, STAGE_2_PORT))
+    connection.bind((STAGE_2_HOST, STAGE_2_PORT))
     connection.listen(10)
 
     while True:
@@ -76,8 +76,8 @@ class MyServer(BaseHTTPRequestHandler):
 
 
 def serve_web_page():
-    web_server = HTTPServer((WEB_ADDRESS, WEB_PORT), MyServer)
-    LOGGER.info("Server started http://%s:%s", WEB_ADDRESS, WEB_PORT)
+    web_server = HTTPServer((WEB_HOST, WEB_PORT), MyServer)
+    LOGGER.info("Server started http://%s:%s", WEB_HOST, WEB_PORT)
 
     try:
         web_server.serve_forever()
