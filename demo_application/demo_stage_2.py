@@ -4,31 +4,38 @@ import json
 import logging
 import os
 import socket
+import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import time
-from concurrent.futures import ThreadPoolExecutor
+
+from common import JsonFileSync, CfgProperty
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
-DEFAULT_CONFIG_PATH = os.path.join(SCRIPT_PATH, 'stage_1.json')
-
-STAGE_2_HOST = os.environ.get('STAGE_2_HOST', 'localhost')
-STAGE_2_PORT = int(os.environ.get('STAGE_2_PORT', 6000))
-
-WEB_HOST = os.environ.get('STAGE_2_HOST', 'localhost')
-WEB_PORT = int(os.environ.get('WEB_PORT', 8081))
 
 LOGGER = logging.getLogger('stage_2')
+
+
+class Config(JsonFileSync):
+    DEFAULT_CONFIG_PATH = os.path.join(SCRIPT_PATH, 'stage_2.json')
+
+    stage_2_host = CfgProperty('STAGE_2_HOST', default='localhost')
+    stage_2_port = CfgProperty('STAGE_2_PORT', default=6000, mapper=int)
+    web_host = CfgProperty('WEB_HOST', default='localhost')
+    web_port = CfgProperty('WEB_PORT', default=7000, mapper=int)
+
+    def __init__(self):
+        super().__init__(self.DEFAULT_CONFIG_PATH)
+
 
 AGGREGATION_DICT = collections.defaultdict(int)
 
 
-def server_loop():
+def server_loop(cfg):
     connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    LOGGER.info('starting server on %s %s', STAGE_2_HOST, STAGE_2_PORT)
+    LOGGER.info('starting server on %s %s', cfg.stage_2_host, cfg)
 
-    connection.bind((STAGE_2_HOST, STAGE_2_PORT))
+    connection.bind((cfg.stage_2_host, cfg.stage_2_port))
     connection.listen(10)
 
     while True:
@@ -75,9 +82,9 @@ class MyServer(BaseHTTPRequestHandler):
         self.wfile.write(bytes("</body></html>", "utf-8"))
 
 
-def serve_web_page():
-    web_server = HTTPServer((WEB_HOST, WEB_PORT), MyServer)
-    LOGGER.info("Server started http://%s:%s", WEB_HOST, WEB_PORT)
+def serve_web_page(cfg):
+    web_server = HTTPServer((cfg.web_host, cfg.web_port), MyServer)
+    LOGGER.info("Server started http://%s:%s", cfg.web_host, cfg.web_port)
 
     try:
         web_server.serve_forever()
@@ -88,11 +95,16 @@ def serve_web_page():
 
 
 def main():
-    with ThreadPoolExecutor(max_workers=5) as executor:
-        server_future = executor.submit(server_loop)
-        web_future = executor.submit(serve_web_page)
-        server_future.result()
-        web_future.result()
+    with Config() as cfg:
+        threads = [
+            threading.Thread(target=server_loop, args=[cfg]),
+            threading.Thread(target=serve_web_page, args=[cfg])
+        ]
+        for t in threads:
+            t.start()
+
+        for t in threads:
+            t.join()
 
 
 if __name__ == '__main__':

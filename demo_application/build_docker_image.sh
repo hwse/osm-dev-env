@@ -17,5 +17,11 @@ find_docker_installation() {
 find_docker_installation
 
 echo "Building docker containers"
-${DOCKER} build -t demo_stage_1 -f docker/stage_1/Dockerfile .
-${DOCKER} build -t demo_stage_2 -f docker/stage_2/Dockerfile .
+
+namespace="demo"
+apps=(stage_1 stage_2 load_balancer service_registry)
+
+for app in "${apps[@]}"; do
+    echo "Building app $app"
+    ${DOCKER} build -t "${namespace}_${app}" -f "docker/${app}/Dockerfile" .
+done

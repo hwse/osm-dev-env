@@ -3,3 +3,5 @@ env_vars.sh
 
 # ignore clonec devops
 devops/
+
+venv/

@@ -1,10 +1,11 @@
-import logging
-import threading
 import json
-import time
+import logging
 import os
+import threading
+import time
 
 LOGGER = logging.getLogger(__name__)
+
 
 class JsonFileSync:
 
@@ -15,12 +16,21 @@ class JsonFileSync:
         self.thread = threading.Thread(target=self.continuous_read)
 
     def start(self):
+        LOGGER.info('starting file sync')
         self.keep_running = True
         self.thread.start()
 
     def stop(self):
+        LOGGER.info('stopping file sync...')
         self.keep_running = False
         self.thread.join(timeout=5)
+
+    def __enter__(self):
+        self.start()
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.stop()
 
     def parse_file(self):
         if not os.path.exists(self.path):
@@ -44,7 +54,30 @@ class JsonFileSync:
         return self.data[item]
 
     def get(self, item, default):
-        if item not in self.data:
-            return default
+        return self.data.get(item, default)
 
-        return self[item]
+
+class CfgProperty:
+    NO_DEFAULT = object()
+
+    def __init__(self, key, default=NO_DEFAULT, mapper=None):
+        self.key = key
+        self.default = default
+        self.mapper = mapper
+
+    @property
+    def has_default(self):
+        return self.default is not self.NO_DEFAULT
+
+    def map_value(self, value):
+        if self.mapper is None:
+            return value
+        else:
+            return self.mapper(value)
+
+    def __get__(self, obj, cls):
+        json_value = obj.get(self.key, self.default) if self.has_default else obj[self.key]
+        return self.map_value(json_value)
+
+    def __set__(self, obj, val):
+        raise AttributeError('{} can not be set'.format(self.__class__))

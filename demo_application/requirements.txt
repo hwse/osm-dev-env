@@ -1,0 +1,4 @@
+-r service_registry_requirements.txt
+-r load_balancer_requirements.txt
+-r stage_1_requirements.txt
+-r stage_2_requirements.txt

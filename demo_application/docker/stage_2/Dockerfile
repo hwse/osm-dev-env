@@ -2,6 +2,10 @@ FROM alpine:3.10
 
 RUN apk add python3
 
-COPY demo_stage_2.py /usr/bin/demo_stage_2.py
+ENV APP_DIR="/opt/stage_2"
+ENV ENTRY_SCRIPT="demo_stage_2.py"
+RUN mkdir ${APP_DIR}
 
-ENTRYPOINT ["demo_stage_2.py"]
+COPY common.py ${ENTRY_SCRIPT} ${APP_DIR}/
+
+ENTRYPOINT "${APP_DIR}/${ENTRY_SCRIPT}"
