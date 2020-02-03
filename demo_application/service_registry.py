@@ -6,20 +6,10 @@ import attr
 from attr.validators import instance_of, optional
 from flask import Flask, request
 
+import common
+from common import S1Instance, S2Instance
+
 app = Flask(__name__)
-
-
-@attr.s(frozen=True)
-class S1Instance:
-    id = attr.ib(converter=int, validator=instance_of(int))
-    host = attr.ib(validator=instance_of(str))
-    port = attr.ib(converter=int, validator=instance_of(int))
-
-
-@attr.s(frozen=True)
-class S2Instance:
-    host = attr.ib(validator=instance_of(str))
-    port = attr.ib(converter=int, validator=instance_of(int))
 
 
 @attr.s
@@ -37,13 +27,17 @@ def get_stage_1():
 
 
 @app.route('/stage_1', methods=['POST'])
-def put_stage_1():
-    host_id = request.args.get('id')
-    host = request.args.get('host')
-    port = request.args.get('port')
-    instance = S1Instance(host_id, host, port)
+def post_stage_1():
+    instance = S1Instance.from_dict(request.args)
     STATE.s1_instances[instance.id] = instance
-    return ""
+    return "OK"
+
+
+@app.route('/stage_1', methods=['DELETE'])
+def delete_stage_1():
+    instance = S1Instance.from_dict(request.args)
+    STATE.s1_instances.pop(instance.id)
+    return "OK"
 
 
 @app.route('/stage_2', methods=['GET'])
@@ -52,13 +46,17 @@ def get_stage_2():
 
 
 @app.route('/stage_2', methods=['POST'])
-def put_stage_2():
-    host = request.args.get('host')
-    port = request.args.get('port')
-    instance = S2Instance(host, port)
+def post_stage_2():
+    instance = S2Instance.from_dict(request.args)
     STATE.s2_instance = instance
     return ""
 
 
+@app.route('/stage_2', methods=['DELETE'])
+def delete_stage_2():
+    STATE.s2_instance = None
+    return "OK"
+
+
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='localhost', port=common.DefaultPorts.SERVICE_REGISTRY, debug=True)

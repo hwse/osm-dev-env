@@ -7,7 +7,7 @@ import socket
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from common import JsonFileSync, CfgProperty
+from common import JsonFileSync, CfgProperty, ServiceRegistration, DefaultPorts, S2Instance
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -17,13 +17,20 @@ LOGGER = logging.getLogger('stage_2')
 class Config(JsonFileSync):
     DEFAULT_CONFIG_PATH = os.path.join(SCRIPT_PATH, 'stage_2.json')
 
+    service_registry = CfgProperty('SERVICE_REGISTRY_HOST',
+                                   default='http://localhost:{}'.format(DefaultPorts.SERVICE_REGISTRY))
+
     stage_2_host = CfgProperty('STAGE_2_HOST', default='localhost')
-    stage_2_port = CfgProperty('STAGE_2_PORT', default=6000, mapper=int)
+    stage_2_port = CfgProperty('STAGE_2_PORT', default=DefaultPorts.STAGE_2, mapper=int)
     web_host = CfgProperty('WEB_HOST', default='localhost')
-    web_port = CfgProperty('WEB_PORT', default=7000, mapper=int)
+    web_port = CfgProperty('WEB_PORT', default=DefaultPorts.WEB_INTERFACE, mapper=int)
 
     def __init__(self):
         super().__init__(self.DEFAULT_CONFIG_PATH)
+
+    @property
+    def stage_2_instance(self):
+        return S2Instance(self.stage_2_host, self.stage_2_port)
 
 
 AGGREGATION_DICT = collections.defaultdict(int)
@@ -33,7 +40,7 @@ def server_loop(cfg):
     connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     connection.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    LOGGER.info('starting server on %s %s', cfg.stage_2_host, cfg)
+    LOGGER.info('starting server on %s port: %s', cfg.stage_2_host, cfg.stage_2_port)
 
     connection.bind((cfg.stage_2_host, cfg.stage_2_port))
     connection.listen(10)
@@ -45,7 +52,7 @@ def server_loop(cfg):
 
 def handle_client(connection, address):
     input_text = ""
-    LOGGER.info('connection from %s', address)
+    LOGGER.debug('connection from %s', address)
     while True:
         data = connection.recv(4096)
         if data:
@@ -61,7 +68,7 @@ def process_data(input_text):
     d = json.loads(input_text)
     for word, count in d.items():
         AGGREGATION_DICT[word.lower()] += count
-    LOGGER.info('aggregated data, new state: %s', AGGREGATION_DICT)
+    LOGGER.debug('aggregated data, new state: %s', AGGREGATION_DICT)
 
 
 def aggregation_html():
@@ -84,7 +91,7 @@ class MyServer(BaseHTTPRequestHandler):
 
 def serve_web_page(cfg):
     web_server = HTTPServer((cfg.web_host, cfg.web_port), MyServer)
-    LOGGER.info("Server started http://%s:%s", cfg.web_host, cfg.web_port)
+    LOGGER.info("Web-Server started http://%s:%s", cfg.web_host, cfg.web_port)
 
     try:
         web_server.serve_forever()
@@ -96,15 +103,16 @@ def serve_web_page(cfg):
 
 def main():
     with Config() as cfg:
-        threads = [
-            threading.Thread(target=server_loop, args=[cfg]),
-            threading.Thread(target=serve_web_page, args=[cfg])
-        ]
-        for t in threads:
-            t.start()
+        with ServiceRegistration(lambda: cfg.service_registry).stage_2_context(cfg.stage_2_instance):
+            threads = [
+                threading.Thread(target=server_loop, args=[cfg]),
+                threading.Thread(target=serve_web_page, args=[cfg])
+            ]
+            for t in threads:
+                t.start()
 
-        for t in threads:
-            t.join()
+            for t in threads:
+                t.join()
 
 
 if __name__ == '__main__':
