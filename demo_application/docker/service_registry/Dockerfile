@@ -1,6 +1,6 @@
 FROM alpine:3.10
 
-RUN apk add python3 py3-pip
+RUN apk add python3 py3-pip bash
 
 ENV APP_DIR="/opt/service_registry"
 ENV ENTRY_SCRIPT="service_registry.py"

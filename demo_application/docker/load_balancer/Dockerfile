@@ -1,6 +1,6 @@
 FROM alpine:3.10
 
-RUN apk add python3 py3-pip
+RUN apk add python3 py3-pip bash
 
 ENV APP_DIR="/opt/load_balancer"
 ENV ENTRY_SCRIPT="load_balancer.py"

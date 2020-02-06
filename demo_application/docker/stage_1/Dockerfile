@@ -1,6 +1,6 @@
 FROM alpine:3.10
 
-RUN apk add python3 py3-pip
+RUN apk add python3 py3-pip bash
 
 ENV APP_DIR="/opt/stage_1"
 ENV ENTRY_SCRIPT="stage_1.py"
