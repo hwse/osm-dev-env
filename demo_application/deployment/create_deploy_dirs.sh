@@ -8,6 +8,8 @@ CODE_DIR="${SCRIPT_DIR}/.."
 VNFS=(load_balancer service_registry stage_1 stage_2)
 CONTROL_FILES=(start.sh stop.sh)
 
+mkdir -p "${VNFS[@]}"
+
 for vnf in "${VNFS[@]}"; do
     echo "Building deploy directory for: $vnf"
     vnf_dir="${SCRIPT_DIR}/${vnf}"
