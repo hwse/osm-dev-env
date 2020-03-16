@@ -27,7 +27,7 @@ vnfd:vnfd-catalog:
             vcpu-count: 1
 
           # Image including the full path
-          image: 'demo_service_registry'
+          image: 'service_registry'
 
           interface:
             # Specify the external interfaces

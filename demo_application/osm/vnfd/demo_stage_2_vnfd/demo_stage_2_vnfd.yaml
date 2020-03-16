@@ -27,7 +27,7 @@ vnfd:vnfd-catalog:
             vcpu-count: 1
 
           # Image including the full path
-          image: 'demo_stage_2'
+          image: 'stage_2'
 
           interface:
             # Specify the external interfaces
