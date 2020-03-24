@@ -33,7 +33,7 @@ nsd:nsd-catalog:
           type: ELAN
           vendor: Paderborn University
           version: '1.0'
-          vim-network-name: default
+          # vim-network-name: default  # important for emulator!
           vnfd-connection-point-ref:
             - member-vnf-index-ref: '1'
               vnfd-connection-point-ref: demo_service_registry_vnfd/cp0

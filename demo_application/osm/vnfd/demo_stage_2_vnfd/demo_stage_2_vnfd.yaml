@@ -22,7 +22,7 @@ vnfd:vnfd-catalog:
 
           # Flavour of the VM to be instantiated for the VDU
           vm-flavor:
-            memory-mb: 512
+            memory-mb: 1024
             storage-gb: 1
             vcpu-count: 1
 
@@ -32,7 +32,7 @@ vnfd:vnfd-catalog:
           interface:
             # Specify the external interfaces
             # There can be multiple interfaces defined
-            - name: eth0
+            - name: stage_20 # attention, no two VNFs should have same if names in emulator
               type: EXTERNAL
               virtual-interface:
                 type: VIRTIO

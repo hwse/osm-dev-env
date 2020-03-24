@@ -7,7 +7,7 @@ import socket
 import threading
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from common import JsonFileSync, CfgProperty, ServiceRegistration, DefaultPorts, S2Instance
+from common import JsonFileSync, CfgProperty, ServiceRegistration, DefaultPorts, S2Instance, ENV_VARS
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 
@@ -18,7 +18,8 @@ class Config(JsonFileSync):
     DEFAULT_CONFIG_PATH = os.path.join(SCRIPT_PATH, 'stage_2.json')
 
     service_registry = CfgProperty('SERVICE_REGISTRY_HOST',
-                                   default='http://localhost:{}'.format(DefaultPorts.SERVICE_REGISTRY))
+                                   default='http://{}:{}'.format(ENV_VARS.service_registry_host,
+                                                                  DefaultPorts.SERVICE_REGISTRY))
 
     stage_2_host = CfgProperty('STAGE_2_HOST', default='localhost')
     stage_2_port = CfgProperty('STAGE_2_PORT', default=DefaultPorts.STAGE_2, mapper=int)

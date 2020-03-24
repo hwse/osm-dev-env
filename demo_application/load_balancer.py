@@ -6,7 +6,7 @@ import socket
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from common import RestSync, CfgProperty, S1Instance, JsonFileSync, DefaultPorts
+from common import RestSync, CfgProperty, S1Instance, JsonFileSync, DefaultPorts, ENV_VARS
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 RUN_DIR = os.environ.get('RUN_DIR', SCRIPT_PATH)
@@ -18,7 +18,8 @@ class LoadBalancerConfig(JsonFileSync):
     DEFAULT_CONFIG_PATH = os.path.join(RUN_DIR, 'load_balancer.json')
 
     service_registry = CfgProperty('SERVICE_REGISTRY_HOST',
-                                   default='http://localhost:{}'.format(DefaultPorts.SERVICE_REGISTRY))
+                                   default='http://{}:{}'.format(ENV_VARS.service_registry_host,
+                                                                 DefaultPorts.SERVICE_REGISTRY))
     host = CfgProperty('LOAD_BALANCER_HOST', default='localhost')
     port = CfgProperty('LOAD_BALANCER_PORT', default=DefaultPorts.LOAD_BALANCER, mapper=int)
 

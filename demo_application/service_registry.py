@@ -14,7 +14,7 @@ app = Flask(__name__)
 
 @attr.s
 class RegistryState:
-    s1_instances = attr.ib(validator=optional(instance_of(dict)), default=attr.Factory(dict))
+    s1_instances = attr.ib(validator=instance_of(dict), default=attr.Factory(dict))
     s2_instance = attr.ib(validator=optional(instance_of(S1Instance)), default=None)
 
 
@@ -59,4 +59,4 @@ def delete_stage_2():
 
 
 if __name__ == '__main__':
-    app.run(host='localhost', port=common.DefaultPorts.SERVICE_REGISTRY, debug=True)
+    app.run(host='0.0.0.0', port=common.DefaultPorts.SERVICE_REGISTRY, debug=False)

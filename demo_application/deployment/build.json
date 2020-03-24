@@ -1,6 +1,9 @@
 {
     "variables": {
-        "vnf": null
+        "vnf": null,
+        "aws_access_key": "",
+        "aws_secret_key": "",
+        "app_user": "ubuntu"
     },
     "builders": [
         {
@@ -15,27 +18,55 @@
             "image_name": "{{user `vnf` }}",
             "source_image": "24287161-95aa-41c6-8486-e85e51d7c88c",
             "networks": "d3a88e8b-b79a-4e5e-b272-26b508f6907e",
-            "security_groups": ["default"],
             "flavor": "ds512M",
-            "insecure": "true"
+            "insecure": "true",
+            "ssh_interface": "private",
+            "ssh_timeout": "1h"
         },
         {
             "name": "docker",
             "type": "docker",
             "image": "ubuntu:18.04",
             "commit": true,
-            "changes": ["ENTRYPOINT [\"\"]"]
+            "changes": [
+                "ENTRYPOINT [\"\"]"
+            ]
+        },
+        {
+            "type": "amazon-ebs",
+            "access_key": "{{user `aws_access_key`}}",
+            "secret_key": "{{user `aws_secret_key`}}",
+            "region": "eu-central-1",
+            "source_ami_filter": {
+                "filters": {
+                    "virtualization-type": "hvm",
+                    "name": "ubuntu/images/*ubuntu-bionic-18.04-amd64-server-*",
+                    "root-device-type": "ebs"
+                },
+                "owners": [
+                    "099720109477"
+                ],
+                "most_recent": true
+            },
+            "instance_type": "t2.micro",
+            "ssh_username": "ubuntu",
+            "ami_name": "{{user `vnf` }}"
         }
     ],
     "provisioners": [
         {
             "type": "shell",
             "inline": [
+                "set -x",
                 "mkdir /opt/{{user `vnf` }}",
-                "echo 'export PATH=$PATH:/opt/{{user `vnf` }}' >> ~/.bashrc",
-                "apt update",
-                "apt install -y python3 python3-pip"
-            ]
+                "chown {{user `app_user`}} /opt/{{user `vnf` }}"
+            ],
+            "execute_command": "sudo env {{ .Vars }} {{ .Path }}",
+            "override": {
+                "docker": {
+                    "execute_command": "{{ .Vars }} {{ .Path }}"
+                }
+            }
         },
         {
             "type": "file",
@@ -45,8 +76,18 @@
         {
             "type": "shell",
             "inline": [
+                "set -x",
+                "echo 'export PATH=$PATH:/opt/{{user `vnf` }}' >> ~/.bashrc",
+                "apt update",
+                "apt install -y python3 python3-pip",
                 "pip3 install -r /opt/{{user `vnf` }}/{{user `vnf` }}_requirements.txt"
-            ]
+            ],
+            "execute_command": "sudo env {{ .Vars }} {{ .Path }}",
+            "override": {
+                "docker": {
+                    "execute_command": "{{ .Vars }} {{ .Path }}"
+                }
+            }
         }
     ],
     "post-processors": [

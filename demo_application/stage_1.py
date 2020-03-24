@@ -6,7 +6,8 @@ import os
 import socket
 import time
 
-from common import JsonFileSync, RestSync, CfgProperty, S1Instance, S2Instance, ServiceRegistration, DefaultPorts
+from common import JsonFileSync, RestSync, CfgProperty, S1Instance, S2Instance, ServiceRegistration, DefaultPorts, \
+    ENV_VARS
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 RUN_DIR = os.environ.get('RUN_DIR', SCRIPT_PATH)
@@ -18,7 +19,8 @@ class Stage1Config(JsonFileSync):
     DEFAULT_CONFIG_PATH = os.path.join(RUN_DIR, 'stage_1.json')
 
     service_registry = CfgProperty('SERVICE_REGISTRY_HOST',
-                                   default='http://localhost:{}'.format(DefaultPorts.SERVICE_REGISTRY))
+                                   default='http://{}:{}'.format(ENV_VARS.service_registry_host,
+                                                                 DefaultPorts.SERVICE_REGISTRY))
     stage_1_id = CfgProperty('STAGE_1_ID', default=0, mapper=int)
     stage_1_host = CfgProperty('STAGE_1_HOST', default='localhost')
     stage_1_port = CfgProperty('STAGE_1_PORT', default=DefaultPorts.STAGE_1, mapper=int)
@@ -49,13 +51,16 @@ def server_loop(cfg, service_registry):
     connection.listen(10)
 
     while True:
-        current_connection, address = connection.accept()
+        try:
+            current_connection, address = connection.accept()
 
-        while not service_registry.stage_2_instance:
-            LOGGER.debug('No stage 2 instance registered')
-            time.sleep(0.5)
+            while not service_registry.stage_2_instance:
+                LOGGER.debug('No stage 2 instance registered')
+                time.sleep(0.5)
 
-        handle_client(current_connection, address, service_registry.stage_2_instance)
+            handle_client(current_connection, address, service_registry.stage_2_instance)
+        except IOError as exc:
+            LOGGER.exception('error in server loop')
 
 
 def handle_client(connection, address, stage_2):

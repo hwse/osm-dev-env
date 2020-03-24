@@ -2,6 +2,7 @@ import abc
 import json
 import logging
 import os
+import socket
 import threading
 import time
 
@@ -11,6 +12,9 @@ from attr.validators import instance_of, is_callable
 
 LOGGER = logging.getLogger(__name__)
 
+IS_PRODUCTION_ENV_FLAG = 'IS_PRODUCTION'
+SERVICE_REGISTRY_HOST_ENV_VAR = 'SERVICE_REGISTRY_HOST'
+
 
 class DefaultPorts:
     SERVICE_REGISTRY = 3000
@@ -18,6 +22,16 @@ class DefaultPorts:
     STAGE_1 = 5000
     STAGE_2 = 6000
     WEB_INTERFACE = 7000
+
+
+class __Environment:
+
+    def __init__(self, env_dict):
+        self.is_production = env_dict.get(IS_PRODUCTION_ENV_FLAG, 'false').lower() == 'true'
+        self.service_registry_host = env_dict.get(SERVICE_REGISTRY_HOST_ENV_VAR, 'localhost')
+
+
+ENV_VARS = __Environment(os.environ)
 
 
 @attr.s(frozen=True)
@@ -57,7 +71,7 @@ class DataSync(abc.ABC):
                 self.data = self.fetch_data()
                 return
             except Exception as e:
-                LOGGER.exception('Error while initialization, retrying...', e)
+                LOGGER.exception('Error while initialization, retrying...')
                 time.sleep(self.wait_seconds)
 
     def start(self):
@@ -175,6 +189,12 @@ class EntryExitManager:
 
     def __exit__(self, *args, **kwargs):
         return self.exit()
+
+
+def where_am_i(target_ip):
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as s:
+        s.connect((target_ip, 80))
+        return s.getsockname()[0]
 
 
 class ServiceRegistration:
